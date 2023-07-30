@@ -1191,9 +1191,6 @@ def download_from_original_stable_diffusion_ckpt(
         StableUnCLIPPipeline,
     )
 
-    if pipeline_class is None:
-        pipeline_class = StableDiffusionPipeline if not controlnet else StableDiffusionControlNetPipeline
-
     if prediction_type == "v-prediction":
         prediction_type = "v_prediction"
 
@@ -1269,6 +1266,12 @@ def download_from_original_stable_diffusion_ckpt(
             model_type = "SDXL-Refiner"
         if image_size is None:
             image_size = 1024
+
+    if pipeline_class is None:
+        if model_type in ["SDXL", "SDXL-Refiner"]:
+            pipeline_class = StableDiffusionXLPipeline if model_type == "SDXL" else StableDiffusionXLImg2ImgPipeline
+        else:
+            pipeline_class = StableDiffusionPipeline if not controlnet else StableDiffusionControlNetPipeline
 
     if num_in_channels is None and pipeline_class == StableDiffusionInpaintPipeline:
         num_in_channels = 9
@@ -1543,7 +1546,7 @@ def download_from_original_stable_diffusion_ckpt(
                 checkpoint, config_name, prefix="conditioner.embedders.1.model.", has_projection=True, **config_kwargs
             )
 
-            pipe = StableDiffusionXLPipeline(
+            pipe = pipeline_class(
                 vae=vae,
                 text_encoder=text_encoder,
                 tokenizer=tokenizer,
